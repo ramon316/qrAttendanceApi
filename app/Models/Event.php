@@ -65,4 +65,10 @@ class Event extends Model
                $now->gte($this->start_time) &&
                $now->lte($this->end_time);
     }
+
+    // Nuevo accessor
+    public function getAttendeesCountAttribute()
+    {
+        return $this->attendances()->count();
+    }
 }

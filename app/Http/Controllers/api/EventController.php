@@ -25,8 +25,9 @@ class EventController extends Controller
      */
     public function index(Request $request)
     {
-        // Obtener solo los eventos del usuario logueado
-        $events = Event::with(['user', 'attendances'])
+        // Obtener solo los eventos del usuario logueado con conteo de asistentes
+        $events = Event::with('user')
+            ->withCount('attendances as attendees_count')
             ->where('user_id', $request->user()->id)
             ->orderBy('start_time', 'asc')
             ->get();
@@ -98,6 +99,7 @@ class EventController extends Controller
         return response()->json([
             'success' => true,
             'event' => $event,
+            'attendees_count' => $event->attendees_count,
         ], 200);
     }
 
