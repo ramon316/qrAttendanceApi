@@ -25,12 +25,35 @@ class EventController extends Controller
      */
     public function index(Request $request)
     {
-        // Obtener solo los eventos del usuario logueado con conteo de asistentes
-        $events = Event::with('user')
+        // Construir la consulta sin ejecutarla aún
+        $query = Event::with('user')
             ->withCount('attendances as attendees_count')
             ->where('user_id', $request->user()->id)
-            ->orderBy('start_time', 'asc')
-            ->get();
+            ->orderBy('start_time', 'asc');
+
+        /* apply filters */
+        if ($request->has('filter')) {
+            switch ($request->get('filter')) {
+                case 'active':
+                    $query->where('start_time', '<=', now())
+                          ->where('end_time', '>=', now());
+                    break;
+                case 'upcoming':
+                    $query->where('start_time', '>', now());
+                    break;
+                case 'past':
+                    $query->where('end_time', '<', now());
+                    break;
+            }
+        }
+
+        /* apply limit */
+        if ($request->has('limit')) {
+            $query->limit($request->get('limit'));
+        }
+
+        // Ahora sí ejecutar la consulta
+        $events = $query->get();
 
         return response()->json([
             'success' => true,

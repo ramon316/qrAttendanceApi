@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     /* attendances */
     Route::post('/attendances', [AttendanceController::class,'checkIn'])->name('attendances.checkIn');
     Route::get('/attendances/my', [AttendanceController::class,'myAttendances'])->name('attendances.my');
+    Route::get('/attendances/my/stats', [AttendanceController::class,'myStats'])->name('attendances.myStats');
     Route::get('/attendances/event/{event}', [AttendanceController::class,'eventAttendances'])->name('attendances.event');
 
 });
