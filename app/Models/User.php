@@ -25,6 +25,8 @@ class User extends Authenticatable
         'password',
         'role',
         'employee_id',
+        'status',
+        'verification_attempts',
     ];
 
     /**
@@ -74,5 +76,28 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'matricula', 'employee_id');
+    }
+
+    /* Verificamos si el usuario su matricula existe */
+    public function isMatriculaValid()
+    {
+        return $this->employee()->exists();
+    }
+
+    /* Verificar si el usuario está activo */
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    /* Verificar si el usuario está pendiente de verificación */
+    public function isPendingVerification()
+    {
+        return $this->status === 'pending_verification';
     }
 }

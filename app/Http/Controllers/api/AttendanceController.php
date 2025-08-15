@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Event;
 use App\Services\GeolocationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AttendanceController extends Controller
@@ -139,6 +140,9 @@ class AttendanceController extends Controller
 
     public function myStats(Request $request)
     {
+        // Agregar log para verificar que se llama
+        Log::info('myStats called for user: ' . $request->user()->id);
+
         try {
             $user = $request->user();
 
