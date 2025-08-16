@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 /* public routes */
 Route::post('/register', [AuthController::class,'register'])->name('register');
 Route::post('/login', [AuthController::class,'login'])->name('login');
+Route::post('/validate-matricula', [AuthController::class,'validateMatricula'])->name('validate-matricula');
 
 /* public route event info by qr code */
 Route::get('/events/qr/{qrCode}', [EventController::class,'getByQR'])->name('events.qr');

@@ -20,7 +20,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'employee_id' => 'required|string|max:12|unique:users',
+            'employee_id' => 'required|string|max:12|unique:users|regex:/^[0-9]+$/',
         ]);
 
         /* if validation fail */
@@ -126,6 +126,43 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $newToken,
         ], 200);
+    }
+
+    /**
+     * Validate employee matricula
+     */
+    public function validateMatricula(Request $request)
+    {
+        // Validar el campo matricula
+        $validated = Validator::make($request->all(), [
+            'matricula' => 'required|string|max:12|regex:/^[0-9]+$/',
+        ]);
+
+        // Si la validación falla
+        if ($validated->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
+                'errors' => $validated->errors()
+            ], 422);
+        }
+
+        // Buscar la matrícula en la tabla employees
+        $employee = Employee::where('matricula', $request->matricula)->first();
+
+        if ($employee) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee matricula found',
+                'valid' => true,
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee matricula not found',
+                'valid' => false,
+            ], 404);
+        }
     }
 }
 
