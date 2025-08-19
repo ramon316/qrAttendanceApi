@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Route;
 })->middleware('auth:sanctum'); */
 
 /* public routes */
-Route::post('/register', [AuthController::class,'register'])->name('register');
-Route::post('/login', [AuthController::class,'login'])->name('login');
+Route::post('/register', [AuthController::class,'register'])->name('api.register');
+Route::post('/login', [AuthController::class,'login'])->name('api.login');
 Route::post('/validate-matricula', [AuthController::class,'validateMatricula'])->name('validate-matricula');
 
 /* public route event info by qr code */
