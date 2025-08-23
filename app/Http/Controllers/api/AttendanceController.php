@@ -45,7 +45,7 @@ class AttendanceController extends Controller
             end_time sea mayor o igual a ahora */
             return response()->json([
                 'success' => false,
-                'message' => 'Event is not active',
+                'message' => 'El evento no se encuentra activo',
             ], 403);
         }
 
@@ -57,8 +57,8 @@ class AttendanceController extends Controller
         if ($existingAttendance) {
             return response()->json([
                 'success' => false,
-                'message' => 'User already checked in',
-            ], 403);
+                'message' => 'Ya te encuentras resgistrado en este evento',
+            ], 405);
         }
 
         /* Calculate distance */
@@ -73,7 +73,7 @@ class AttendanceController extends Controller
         if ($distance > $event->allowed_radius) {
             return response()->json([
                 'success' => false,
-                'message' => 'You are too far from the event location',
+                'message' => 'Estas demasiado lejos del evento',
                 'distance' => round($distance, 2),
                 'allowed_radius' => $event->allowed_radius
             ], 400);
@@ -92,7 +92,7 @@ class AttendanceController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Successfully checked in',
+            'message' => 'Registro exitoso',
             'attendance' => $attendance->load(['event', 'user']),
             'distance' => round($distance, 2)
         ], 201);
