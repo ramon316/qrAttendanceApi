@@ -65,10 +65,10 @@
                                 <div class="border-t border-gray-200 dark:border-gray-600"></div>
 
                                 <!-- Authentication -->
-                                <form method="POST" action="{{ route('logout') }}" x-data>
+                                <form method="POST" action="{{ route('logout') }}" id="logout-form">
                                     @csrf
 
-                                    <x-dropdown-link href="{{ route('logout') }}" @click.prevent="$root.submit();">
+                                    <x-dropdown-link href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                         {{ __('Log Out') }}
                                     </x-dropdown-link>
                                 </form>

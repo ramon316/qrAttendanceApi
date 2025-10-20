@@ -1,15 +1,16 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+<x-admin-layout
+title="Dashboard"
+:breadcrumbs="[
+    ['name' => 'Dashboard', 'href' => route('dashboard')],
+    ['name' => 'Prueba']
+]">
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
-                <x-welcome />
-            </div>
-        </div>
-    </div>
-</x-app-layout>
+{{-- Esto es lo que se coloca del lado derecho al nivel de las breadcrumbs
+Esta en nuestra admin-layout--}}
+<x-slot name="action">
+
+</x-slot>
+
+ {{-- Aqui agregamos el contenido de nuestro slot --}}
+
+</x-admin-layout>
