@@ -20,7 +20,7 @@ Route::get('/events/qr/{qrCode}', [EventController::class,'getByQR'])->name('eve
 /* private routes */
 Route::middleware('auth:sanctum')->group(function () {
     /* auth */
-    Route::post('/logout', [AuthController::class,'logout'])->name('logout');
+    Route::post('/logout', [AuthController::class,'logout'])->name('api.logout');
     Route::get('/profile', [AuthController::class,'profile'])->name('profile');
     Route::get('/check-status', [AuthController::class,'checkStatus'])->name('check-status');
 
