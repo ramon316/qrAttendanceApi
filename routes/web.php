@@ -17,6 +17,10 @@ Route::middleware([
     'redirect.if.admin',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('user.dashboard');
     })->name('dashboard');
+
+    Route::get('/my-attendances', function () {
+        return view('user.my-attendances');
+    })->name('user.my-attendances');
 });

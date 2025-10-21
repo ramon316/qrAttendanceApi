@@ -2,7 +2,7 @@
 title="Dashboard"
 :breadcrumbs="[
     ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
-    ['name' => 'Prueba']
+    /* ['name' => 'Prueba'] */
 ]">
 
 {{-- Esto es lo que se coloca del lado derecho al nivel de las breadcrumbs

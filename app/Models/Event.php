@@ -71,4 +71,12 @@ class Event extends Model
     {
         return $this->attendances()->count();
     }
+
+    /**
+     * Get the pending attendances for this event.
+     */
+    public function pendingAttendances()
+    {
+        return $this->hasMany(PendingAttendance::class);
+    }
 }

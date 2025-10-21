@@ -71,6 +71,14 @@ class Employee extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'employee_id', 'matricula');
+        return $this->hasOne(User::class, 'employee_id', 'matricula');
+    }
+
+    /**
+     * Get the pending attendances for this employee.
+     */
+    public function pendingAttendances()
+    {
+        return $this->hasMany(PendingAttendance::class, 'employee_matricula', 'matricula');
     }
 }

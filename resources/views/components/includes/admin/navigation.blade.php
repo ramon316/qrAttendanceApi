@@ -14,9 +14,9 @@
                     </svg>
                 </button>
                 <a href="/" class="flex ms-2 md:me-24">
-                    <img src="https://flowbite.com/docs/images/logo.svg" class="h-8 me-3" alt="FlowBite Logo" />
+                    <img src="{{ asset('images/app-icon.png') }}" class="h-8 me-3" alt="Asistencia sección 8 logo" />
                     <span
-                        class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Flowbite</span>
+                        class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Asistencia Sección 8</span>
                 </a>
             </div>
             <div class="flex justify-end">
