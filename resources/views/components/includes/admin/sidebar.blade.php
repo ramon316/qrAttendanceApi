@@ -7,6 +7,18 @@ $links = [
     'active' => request()->routeIs('admin.dashboard'),
     ],
     [
+    'name' => 'Eventos',
+    'icon' => 'fa-solid fa-calendar-alt',
+    'href' => route('admin.events.index'),
+    'active' => request()->routeIs('admin.events.*'),
+    ],
+    [
+    'name' => 'Usuarios',
+    'icon' => 'fa-solid fa-users',
+    'href' => route('admin.users.attendances'),
+    'active' => request()->routeIs('admin.users.*'),
+    ],
+    /* [
     'header' => 'Administrar página',
     ],
     [
@@ -28,7 +40,7 @@ $links = [
             'active' => false,
             ],
         ],
-    ],
+    ], */
 ]
 @endphp
 <aside id="logo-sidebar"

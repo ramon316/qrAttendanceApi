@@ -93,7 +93,7 @@
             @endforeach
         </div>
 
-        {{-- Paginación --}}
+        {{-- Paginación --}}z
         <div class="mt-6">
             {{ $attendances->links() }}
         </div>
