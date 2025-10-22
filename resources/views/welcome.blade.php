@@ -256,6 +256,7 @@
             <p class="text-gray-400 mb-4">Control de asistencia inteligente y seguro</p>
             <div class="text-gray-500 text-sm">
                 <p>&copy; {{ date('Y') }} Asistencia Sección 8. Todos los derechos reservados.</p>
+                <p>Created by Nexusolutions MG</p>
             </div>
         </div>
     </footer>
