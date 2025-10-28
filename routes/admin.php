@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Models\Event;
+use App\Http\Controllers\Admin\SystemController;
 
 Route::get('/', function () {
     return view('admin.dashboard');
@@ -69,3 +70,14 @@ Route::get('/events/{event}/export', function (Event $event) {
 Route::get('/users/attendances', function () {
     return view('admin.users.attendances');
 })->name('users.attendances');
+
+// Rutas de Sistema y Herramientas
+Route::prefix('system')->name('system.')->controller(SystemController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/pending-stats', 'pendingStats')->name('pending-stats');
+    Route::post('/migrate-all', 'migrateAll')->name('migrate-all');
+    Route::post('/migrate-by-matricula', 'migrateByMatricula')->name('migrate-by-matricula');
+    Route::post('/clear-cache', 'clearCache')->name('clear-cache');
+    Route::post('/optimize', 'optimize')->name('optimize');
+    Route::post('/clear-optimize', 'clearOptimize')->name('clear-optimize');
+});
