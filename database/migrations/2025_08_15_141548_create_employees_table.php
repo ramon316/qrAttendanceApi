@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('employees', function (Blueprint $table) {
-            $table->string('matricula');
+            $table->string('matricula')->primary();
             $table->string('apellido_paterno');
-            $table->string('apellido_materno');
-            $table->string('nombres');
+            $table->string('apellido_materno')->nullable();
+            $table->string('nombres')->nullable();
             $table->string('nombre_completo');
             $table->string('puesto');
             $table->string('puesto_desc');

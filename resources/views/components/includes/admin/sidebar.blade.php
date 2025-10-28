@@ -18,6 +18,12 @@ $links = [
     'href' => route('admin.users.attendances'),
     'active' => request()->routeIs('admin.users.*'),
     ],
+    [
+    'name' => 'Sistema',
+    'icon' => 'fa-solid fa-wrench',
+    'href' => route('admin.system.index'),
+    'active' => request()->routeIs('admin.system.*'),
+    ],
     /* [
     'header' => 'Administrar página',
     ],
