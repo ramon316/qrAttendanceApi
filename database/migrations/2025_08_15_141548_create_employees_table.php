@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('departamento_desc');
             $table->string('clave_adscripcion');
             $table->string('tipo_contratacion');
-            $table->string('tipo_cempleado');
+            $table->string('tipo_empleado');
             $table->string('curp');
             $table->string('nss');
             $table->string('rfc');

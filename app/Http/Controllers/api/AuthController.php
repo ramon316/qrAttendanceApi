@@ -37,6 +37,7 @@ class AuthController extends Controller
         // Determinar el status basado en si existe la matrícula
         $status = $employee ? 'active' : 'pending_verification';
 
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
