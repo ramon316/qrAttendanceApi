@@ -3,17 +3,21 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Attendance;
+use App\Models\PendingAttendance;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 
 class UserAttendanceTable extends DataTableComponent
 {
-    public $userId;
+    public $userId = null;
+    public $employeeMatricula = null;
 
-    public function mount($userId)
+    public function mount($userId = null, $employeeMatricula = null)
     {
         $this->userId = $userId;
+        $this->employeeMatricula = $employeeMatricula;
     }
 
     public function configure(): void
@@ -31,9 +35,20 @@ class UserAttendanceTable extends DataTableComponent
 
     public function builder(): Builder
     {
-        return Attendance::query()
-            ->with('event')
-            ->where('attendances.user_id', $this->userId);
+        // Si solo hay employeeMatricula (sin usuario registrado), solo consultar pending_attendances
+        if ($this->employeeMatricula && !$this->userId) {
+            return PendingAttendance::query()
+                ->where('employee_matricula', $this->employeeMatricula)
+                ->whereNull('migrated_to_attendance_id');
+        }
+
+        // Si hay userId, solo mostrar attendances (asistencias confirmadas del usuario registrado)
+        if ($this->userId) {
+            return Attendance::query()->where('user_id', $this->userId);
+        }
+
+        // Por defecto, retornar consulta vacía
+        return Attendance::query()->whereRaw('1 = 0');
     }
 
     public function columns(): array
@@ -46,8 +61,8 @@ class UserAttendanceTable extends DataTableComponent
 
             Column::make('Evento', 'event_id')
                 ->format(function ($value, $row) {
-                    // Usar la relación cargada con eager loading
-                    $event = $row->event;
+                    // Obtener el evento directamente por ID ya que usamos UNION
+                    $event = \App\Models\Event::find($value);
 
                     if (!$event) {
                         return '<div class="text-sm text-gray-500">Evento no disponible</div>';
@@ -62,8 +77,8 @@ class UserAttendanceTable extends DataTableComponent
 
             Column::make('Fecha del Evento', 'event_id')
                 ->format(function ($value, $row) {
-                    // Usar la relación cargada con eager loading
-                    $event = $row->event;
+                    // Obtener el evento directamente por ID ya que usamos UNION
+                    $event = \App\Models\Event::find($value);
 
                     if (!$event) {
                         return '<div class="text-sm text-gray-500">N/A</div>';
@@ -100,8 +115,8 @@ class UserAttendanceTable extends DataTableComponent
             Column::make('Distancia', 'distance_meters')
                 ->sortable()
                 ->format(function ($value, $row) {
-                    // Usar la relación cargada con eager loading
-                    $event = $row->event;
+                    // Obtener el evento directamente por ID ya que usamos UNION
+                    $event = \App\Models\Event::find($row->event_id);
 
                     if (!$event) {
                         return '<div class="text-sm text-gray-500">N/A</div>';

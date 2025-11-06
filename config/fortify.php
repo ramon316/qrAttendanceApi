@@ -145,7 +145,7 @@ return [
 
     'features' => [
         /* Se comenta para evitar el registro en la web */
-        /* Features::registration(), */
+        Features::registration(),
         Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),

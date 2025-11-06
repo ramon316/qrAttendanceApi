@@ -20,6 +20,12 @@
             </div>
 
             <div class="mt-4">
+                <x-label for="employee_id" value="{{ __('Employee ID (Matrícula)') }}" />
+                <x-input id="employee_id" class="block mt-1 w-full" type="text" name="employee_id" :value="old('employee_id')" required autocomplete="employee_id" maxlength="12" pattern="[0-9]+" />
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ __('Ingrese su número de matrícula (solo números)') }}</p>
+            </div>
+
+            <div class="mt-4">
                 <x-label for="password" value="{{ __('Password') }}" />
                 <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
             </div>

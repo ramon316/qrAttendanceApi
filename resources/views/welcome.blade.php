@@ -72,9 +72,14 @@
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="text-white hover:text-gray-200 transition">
+                        <a href="{{ route('login') }}" class="text-white hover:text-gray-200 transition px-4 py-2 rounded-lg hover:bg-white/10">
                             Iniciar Sesión
                         </a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="bg-white text-[#800016] hover:bg-gray-100 transition px-6 py-2 rounded-lg font-semibold shadow-lg">
+                                Registrarse
+                            </a>
+                        @endif
                     @endauth
                 </div>
             @endif

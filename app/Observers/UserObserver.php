@@ -54,7 +54,7 @@ class UserObserver
     public function updated(User $user): void
     {
         // Check if employee_id was changed
-        if (!$user->isDirty('employee_id')) {
+        if (!$user->wasChanged('employee_id')) {
             return;
         }
 
