@@ -23,4 +23,24 @@ Route::middleware([
     Route::get('/my-attendances', function () {
         return view('user.my-attendances');
     })->name('user.my-attendances');
+
+    Route::get('/events/posada-2025', function () {
+        // Get or create the Posada 2025 event
+        $event = \App\Models\Event::firstOrCreate(
+            ['name' => 'Confirmación Posada 2025'],
+            [
+                'description' => 'Evento de Posada 2025',
+                'latitude' => 0,
+                'longitude' => 0,
+                'address' => 'Por definir',
+                'allowed_radius' => 100,
+                'start_time' => now(),
+                'end_time' => now()->addDays(30),
+                'active' => true,
+                'user_id' => auth()->id(),
+            ]
+        );
+
+        return view('user.events.posada-2025', compact('event'));
+    })->name('user.events.posada-2025');
 });

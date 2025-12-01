@@ -12,6 +12,20 @@ $links = [
     'href' => route('user.my-attendances'),
     'active' => request()->routeIs('user.my-attendances'),
     ],
+    [
+    'name' => 'Eventos',
+    'icon' => 'fa-solid fa-calendar-days',
+    'href' => '#',
+    'active' => request()->routeIs('user.events.*'),
+        'submenu' => [
+            [
+            'name' => 'Posada 2025',
+            'icon' => 'fa-solid fa-circle',
+            'href' => route('user.events.posada-2025'),
+            'active' => request()->routeIs('user.events.posada-2025'),
+            ],
+        ],
+    ],
     /* [
     'header' => 'Administrar página',
     ],

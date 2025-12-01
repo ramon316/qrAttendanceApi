@@ -101,4 +101,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(PendingAttendance::class, 'employee_matricula', 'employee_id');
     }
+
+    /**
+     * Get the event confirmation for this user.
+     */
+    public function eventConfirmation()
+    {
+        return $this->hasOne(EventConfirmation::class);
+    }
 }

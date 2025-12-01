@@ -79,4 +79,44 @@ class Event extends Model
     {
         return $this->hasMany(PendingAttendance::class);
     }
+
+    /**
+     * Get the event confirmations for this event.
+     */
+    public function confirmations()
+    {
+        return $this->hasMany(EventConfirmation::class);
+    }
+
+    /**
+     * Get the total number of confirmed adults for this event.
+     */
+    public function getTotalAdultsAttribute()
+    {
+        return $this->confirmations()->sum('adults');
+    }
+
+    /**
+     * Get the total number of confirmed teenagers for this event.
+     */
+    public function getTotalTeenagersAttribute()
+    {
+        return $this->confirmations()->sum('teenagers');
+    }
+
+    /**
+     * Get the total number of confirmed children for this event.
+     */
+    public function getTotalChildrenAttribute()
+    {
+        return $this->confirmations()->sum('children');
+    }
+
+    /**
+     * Get the total number of confirmed attendees (adults + teenagers + children).
+     */
+    public function getTotalConfirmedAttendeesAttribute()
+    {
+        return $this->total_adults + $this->total_teenagers + $this->total_children;
+    }
 }
