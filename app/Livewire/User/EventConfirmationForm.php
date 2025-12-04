@@ -18,17 +18,13 @@ class EventConfirmationForm extends Component
 
     public $zones = [
         'chihuahua' => 'Chihuahua',
-        'hidalgo_del_parral' => 'Hidalgo del Parral',
-        'delicias' => 'Delicias',
-        'cuauhtemoc' => 'Cuauhtémoc',
         'juarez' => 'Juárez',
-        'nuevo_casas_grandes' => 'Nuevo Casas Grandes',
     ];
 
     protected function rules()
     {
         return [
-            'zone' => 'required|in:chihuahua,hidalgo_del_parral,delicias,cuauhtemoc,juarez,nuevo_casas_grandes',
+            'zone' => 'required|in:chihuahua,juarez',
             'adults' => 'required|integer|min:0',
             'teenagers' => 'required|integer|min:0',
             'children' => 'required|integer|min:0',

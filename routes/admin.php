@@ -71,6 +71,13 @@ Route::get('/users/attendances', function () {
     return view('admin.users.attendances');
 })->name('users.attendances');
 
+// Rutas de Confirmaciones
+Route::prefix('confirmations')->name('confirmations.')->group(function () {
+    Route::get('/posada-2025', function () {
+        return view('admin.confirmations.posada-2025');
+    })->name('posada-2025');
+});
+
 // Rutas de Sistema y Herramientas
 Route::prefix('system')->name('system.')->controller(SystemController::class)->group(function () {
     Route::get('/', 'index')->name('index');
