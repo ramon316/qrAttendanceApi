@@ -14,7 +14,7 @@
                     {{ $isEditing ? 'Actualizar Confirmación' : 'Confirmar Asistencia' }}
                 </h2>
                 <p class="text-gray-600 dark:text-gray-400 text-sm">
-                    Por favor, proporciona la información sobre los asistentes que te acompañarán al evento de nuestra posada 2025 en la sede que te corresponda.
+                    Por favor, proporciona la información sobre los asistentes que te acompañarán al evento de nuestra posada 2025 en la sede que te corresponda. Recuerda incluirte en el conteo de personas confirmadas
                 </p>
             </div>
 

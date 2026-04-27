@@ -6,6 +6,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/mothers-day-registration', \App\Livewire\Public\MothersDayRegistration::class)
+    ->name('mothers-day.registration');
+
 Route::get('/privacy', function () {
     return view('public.privacy');
 });

@@ -78,6 +78,45 @@ Route::prefix('confirmations')->name('confirmations.')->group(function () {
     })->name('posada-2025');
 });
 
+// Rutas de Día de las Madres
+Route::prefix('mothers-day')->name('mothers-day.')->group(function () {
+    Route::get('/', function () {
+        return view('admin.mothers-day.index');
+    })->name('index');
+
+    Route::get('/export', function () {
+        $registrations = \App\Models\MothersDayRegistration::all();
+        $filename = 'registros-dia-madres-' . date('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($registrations) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            fputcsv($file, ['ID', 'Zona', 'Matrícula', 'Nombre', 'Email', 'Teléfono', 'Fecha Registro']);
+
+            foreach ($registrations as $reg) {
+                fputcsv($file, [
+                    $reg->id,
+                    $reg->zone,
+                    $reg->matricula,
+                    $reg->name,
+                    $reg->email,
+                    $reg->phone,
+                    $reg->created_at->format('d/m/Y H:i:s')
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    })->name('export');
+});
+
 // Rutas de Sistema y Herramientas
 Route::prefix('system')->name('system.')->controller(SystemController::class)->group(function () {
     Route::get('/', 'index')->name('index');

@@ -13,6 +13,12 @@ $links = [
     'active' => request()->routeIs('admin.events.*'),
     ],
     [
+    'name' => 'Día de las Madres',
+    'icon' => 'fa-solid fa-heart',
+    'href' => route('admin.mothers-day.index'),
+    'active' => request()->routeIs('admin.mothers-day.*'),
+    ],
+    /* [
     'name' => 'Confirmaciones',
     'icon' => 'fa-solid fa-clipboard-check',
     'href' => '#',
@@ -25,7 +31,7 @@ $links = [
         'active' => request()->routeIs('admin.confirmations.posada-2025'),
         ],
     ],
-    ],
+    ], */
     [
     'name' => 'Usuarios',
     'icon' => 'fa-solid fa-users',
