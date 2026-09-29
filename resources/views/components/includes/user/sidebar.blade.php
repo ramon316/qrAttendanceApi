@@ -7,6 +7,12 @@ $links = [
     'active' => request()->routeIs('dashboard'),
     ],
     [
+    'name' => 'Registrar Asistencia',
+    'icon' => 'fa-solid fa-qrcode',
+    'href' => route('user.scan-attendance'),
+    'active' => request()->routeIs('user.scan-attendance'),
+    ],
+    [
     'name' => 'Mis Asistencias',
     'icon' => 'fa-solid fa-calendar-check',
     'href' => route('user.my-attendances'),

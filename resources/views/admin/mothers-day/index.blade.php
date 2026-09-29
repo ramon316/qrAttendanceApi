@@ -16,6 +16,10 @@
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Listado detallado de todas las colaboradoras registradas para el evento.</p>
                 </div>
                 <div class="flex space-x-3">
+                    <a href="{{ route('admin.mothers-day.quick-add') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-plus mr-2"></i> Registro Rápido
+                    </a>
                     <a href="{{ route('admin.mothers-day.export') }}" 
                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                         <i class="fas fa-file-export mr-2"></i> Exportar a CSV

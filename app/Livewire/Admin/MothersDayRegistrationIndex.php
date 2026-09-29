@@ -12,6 +12,8 @@ class MothersDayRegistrationIndex extends DataTableComponent
 {
     protected $model = MothersDayRegistration::class;
 
+    protected $listeners = ['registration-added' => '$refresh'];
+
     public function configure(): void
     {
         $this->setPrimaryKey('id')

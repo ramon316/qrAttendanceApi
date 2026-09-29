@@ -19,7 +19,7 @@
                             @if($event->isActive())
                                 <x-wire-badge flat positive icon="check-circle" label="Activo" />
                             @else
-                                <x-wire-badge flat secondary icon="times-circle" label="Inactivo" />
+                                <x-wire-badge flat secondary icon="x-circle" label="Inactivo" />
                             @endif
                         </div>
                     </div>

@@ -84,6 +84,10 @@ Route::prefix('mothers-day')->name('mothers-day.')->group(function () {
         return view('admin.mothers-day.index');
     })->name('index');
 
+    Route::get('/quick-add', function () {
+        return view('admin.mothers-day.quick-add');
+    })->name('quick-add');
+
     Route::get('/export', function () {
         $registrations = \App\Models\MothersDayRegistration::all();
         $filename = 'registros-dia-madres-' . date('Y-m-d') . '.csv';

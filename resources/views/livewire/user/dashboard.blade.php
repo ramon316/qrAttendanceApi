@@ -163,11 +163,10 @@
                                     <i class="fas fa-users mr-1"></i>
                                     {{ $event->attendances->count() }} asistente(s)
                                 </div>
-                                {{-- Deshanilitado por el momento  --}}
-                                {{-- <x-wire-button xs primary>
+                                <x-wire-button xs primary href="{{ route('user.scan-attendance') }}">
                                     <i class="fas fa-qrcode mr-1"></i>
                                     Escanear QR
-                                </x-wire-button> --}}
+                                </x-wire-button>
                             </div>
                         </div>
                     </x-wire-card>

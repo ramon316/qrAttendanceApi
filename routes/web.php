@@ -6,8 +6,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/mothers-day-registration', \App\Livewire\Public\MothersDayRegistration::class)
-    ->name('mothers-day.registration');
+/*Route::get('/mothers-day-registration', \App\Livewire\Public\MothersDayRegistration::class)
+    ->name('mothers-day.registration');*/
 
 Route::get('/privacy', function () {
     return view('public.privacy');
@@ -26,6 +26,10 @@ Route::middleware([
     Route::get('/my-attendances', function () {
         return view('user.my-attendances');
     })->name('user.my-attendances');
+
+    Route::get('/scan-attendance', function () {
+        return view('user.attendance-scanner');
+    })->name('user.scan-attendance');
 
     Route::get('/events/posada-2025', function () {
         // Get or create the Posada 2025 event
