@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Event;
+use App\Services\AttendanceService;
 use App\Services\GeolocationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,16 +14,17 @@ use Illuminate\Support\Facades\Validator;
 class AttendanceController extends Controller
 {
 
-    protected $geolocationService;
-    public function __construct(GeolocationService $geolocationService)
+    protected $attendanceService;
+
+    public function __construct(AttendanceService $attendanceService)
     {
-        $this->geolocationService = $geolocationService;
+        $this->attendanceService = $attendanceService;
     }
 
     public function checkIn(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'qr_code' => 'required|exists:events,qr_code',
+            'qr_code' => 'required|string',
             'user_latitude' => 'required|numeric|between:-90,90',
             'user_longitude' => 'required|numeric|between:-180,180',
         ]);
@@ -35,83 +37,69 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        $event = Event::where('qr_code', $request->qr_code)->firstOrFail();
-        $user = $request->user();
-
-        if (!$event->isActive()) {
-            /* IsActive es un metodo en el modelo que verifica tres cosas
-            active === true
-            Start_time sea menor o igual a ahora
-            end_time sea mayor o igual a ahora */
-            return response()->json([
-                'success' => false,
-                'message' => 'El evento no se encuentra activo',
-            ], 403);
-        }
-
-        /* Is registered */
-        $existingAttendance = Attendance::where('event_id', $event->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existingAttendance) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ya te encuentras resgistrado en este evento',
-            ], 405);
-        }
-
-        /* Calculate distance */
-        $distance = $this->geolocationService->calculateDistance(
-            $event->latitude,
-            $event->longitude,
-            $request->user_latitude,
-            $request->user_longitude
+        $result = $this->attendanceService->registerCheckIn(
+            user: $request->user(),
+            qrCode: $request->qr_code,
+            latitude: (float) $request->user_latitude,
+            longitude: (float) $request->user_longitude
         );
 
-        /* Check if is within radius */
-        if ($distance > $event->allowed_radius) {
-            return response()->json([
+        if (!$result->success) {
+            $payload = [
                 'success' => false,
-                'message' => 'Estas demasiado lejos del evento',
-                'distance' => round($distance, 2),
-                'allowed_radius' => $event->allowed_radius
-            ], 400);
-        }
+                'message' => $result->message,
+            ];
 
-        /* store register */
-        $attendance = Attendance::create([
-            'event_id' => $event->id,
-            'user_id' => $user->id,
-            'user_latitude' => $request->user_latitude,
-            'user_longitude' => $request->user_longitude,
-            'distance_meters' => $distance,
-            'verified' => true,
-            'checked_in_at' => now(),
-        ]);
+            if ($result->distance !== null) {
+                $payload['distance'] = $result->distance;
+                $payload['allowed_radius'] = $result->allowedRadius;
+            }
+
+            return response()->json($payload, $result->statusCode);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Registro exitoso',
-            'attendance' => $attendance->load(['event', 'user']),
-            'distance' => round($distance, 2)
+            'message' => $result->message,
+            'attendance' => $result->attendance->load(['event', 'user']),
+            'distance' => $result->distance,
         ], 201);
     }
 
     public function myAttendances(Request $request)
     {
-        $attendances = Attendance::with(['event'])
+        $perPage = min((int) $request->input('per_page', 15), 100);
+
+        $query = Attendance::with(['event'])
             ->where('user_id', $request->user()->id)
-            ->orderBy('checked_in_at', 'desc')
-            ->get();
+            ->orderBy('checked_in_at', 'desc');
+
+        if ($request->boolean('all')) {
+            $attendances = $query->limit(500)->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendances retrieved successfully',
+                'attendances' => $attendances,
+                'total' => $attendances->count(),
+            ]);
+        }
+
+        $paginator = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'message' => 'Attendances retrieved successfully',
-            'attendances' => $attendances
+            'attendances' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'has_more' => $paginator->hasMorePages(),
+            ],
         ]);
     }
-
 
     public function eventAttendances(Request $request, $eventId)
     {
@@ -125,16 +113,37 @@ class AttendanceController extends Controller
             ], 403);
         }
 
-        $attendances = Attendance::with(['user'])
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $query = Attendance::with(['user'])
             ->where('event_id', $eventId)
-            ->orderBy('checked_in_at', 'desc')
-            ->get();
+            ->orderBy('checked_in_at', 'desc');
+
+        if ($request->boolean('all')) {
+            $attendances = $query->get();
+
+            return response()->json([
+                'success' => true,
+                'event' => $event,
+                'attendances' => $attendances,
+                'total_attendees' => $attendances->count(),
+            ]);
+        }
+
+        $paginator = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'event' => $event,
-            'attendances' => $attendances,
-            'total_attendees' => $attendances->count()
+            'attendances' => $paginator->items(),
+            'total_attendees' => $paginator->total(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'has_more' => $paginator->hasMorePages(),
+            ],
         ]);
     }
 
@@ -146,23 +155,18 @@ class AttendanceController extends Controller
         try {
             $user = $request->user();
 
-            // Obtener todas las asistencias del usuario
-            $attendances = Attendance::where('user_id', $user->id)
-                ->with('event')
-                ->get();
+            // Calcular estadísticas agregadas directamente en base de datos
+            $statsAggregated = Attendance::where('user_id', $user->id)
+                ->selectRaw("
+                    COUNT(*) as total_attendances,
+                    SUM(CASE WHEN verified = 1 THEN 1 ELSE 0 END) as verified_attendances,
+                    SUM(CASE WHEN verified = 0 THEN 1 ELSE 0 END) as unverified_attendances,
+                    COUNT(DISTINCT event_id) as events_attended,
+                    AVG(distance_meters) as average_distance
+                ")
+                ->first();
 
-            // Calcular estadísticas
-            $totalAttendances = $attendances->count();
-            $verifiedAttendances = $attendances->where('verified', true)->count();
-            $unverifiedAttendances = $attendances->where('verified', false)->count();
-
-            // Contar eventos únicos
-            $eventsAttended = $attendances->pluck('event_id')->unique()->count();
-
-            // Calcular distancia promedio
-            $averageDistance = $attendances->avg('distance_meters') ?? 0;
-
-            // Obtener las 5 asistencias más recientes
+            // Obtener únicamente las 5 asistencias más recientes con su evento
             $recentAttendances = Attendance::where('user_id', $user->id)
                 ->with('event')
                 ->orderBy('checked_in_at', 'desc')
@@ -170,12 +174,12 @@ class AttendanceController extends Controller
                 ->get();
 
             $stats = [
-                'total_attendances' => $totalAttendances,
-                'verified_attendances' => $verifiedAttendances,
-                'unverified_attendances' => $unverifiedAttendances,
-                'events_attended' => $eventsAttended,
-                'average_distance' => round($averageDistance, 2),
-                'recent_attendances' => $recentAttendances
+                'total_attendances' => (int) ($statsAggregated->total_attendances ?? 0),
+                'verified_attendances' => (int) ($statsAggregated->verified_attendances ?? 0),
+                'unverified_attendances' => (int) ($statsAggregated->unverified_attendances ?? 0),
+                'events_attended' => (int) ($statsAggregated->events_attended ?? 0),
+                'average_distance' => round((float) ($statsAggregated->average_distance ?? 0), 2),
+                'recent_attendances' => $recentAttendances,
             ];
 
             return response()->json([

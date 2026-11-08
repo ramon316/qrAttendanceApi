@@ -38,6 +38,12 @@ class AttendanceMigrationService
             ];
         }
 
+        // Precargar en memoria las asistencias existentes del usuario para los eventos involucrados (evita N consultas)
+        $existingAttendanceMap = Attendance::where('user_id', $user->id)
+            ->whereIn('event_id', $pendingAttendances->pluck('event_id'))
+            ->pluck('id', 'event_id')
+            ->toArray();
+
         $migratedCount = 0;
         $failed = [];
 
@@ -45,21 +51,16 @@ class AttendanceMigrationService
             try {
                 DB::beginTransaction();
 
-                // Check if attendance already exists for this event and user
-                $existingAttendance = Attendance::where('event_id', $pendingAttendance->event_id)
-                    ->where('user_id', $user->id)
-                    ->first();
+                $existingAttendanceId = $existingAttendanceMap[$pendingAttendance->event_id] ?? null;
 
-                if ($existingAttendance) {
-                    // If already exists, just mark as migrated without creating duplicate
+                if ($existingAttendanceId) {
+                    // Si ya existe la asistencia, marcar como migrada sin duplicar
                     $pendingAttendance->update([
-                        'migrated_to_attendance_id' => $existingAttendance->id,
+                        'migrated_to_attendance_id' => $existingAttendanceId,
                         'migrated_at' => now(),
                     ]);
-
-                    Log::info("Pending attendance {$pendingAttendance->id} already exists as attendance {$existingAttendance->id}");
                 } else {
-                    // Create new attendance record
+                    // Crear nuevo registro de asistencia
                     $attendance = Attendance::create([
                         'event_id' => $pendingAttendance->event_id,
                         'user_id' => $user->id,
@@ -70,13 +71,14 @@ class AttendanceMigrationService
                         'checked_in_at' => $pendingAttendance->checked_in_at,
                     ]);
 
-                    // Update pending attendance with migration info
+                    // Actualizar mapa para evitar duplicados en la misma ejecución
+                    $existingAttendanceMap[$pendingAttendance->event_id] = $attendance->id;
+
+                    // Actualizar registro pendiente con la referencia migrada
                     $pendingAttendance->update([
                         'migrated_to_attendance_id' => $attendance->id,
                         'migrated_at' => now(),
                     ]);
-
-                    Log::info("Migrated pending attendance {$pendingAttendance->id} to attendance {$attendance->id} for user {$user->id}");
                 }
 
                 DB::commit();
@@ -129,24 +131,22 @@ class AttendanceMigrationService
      */
     public function migrateAllPending(): array
     {
-        $pendingAttendances = PendingAttendance::notMigrated()
-            ->select('employee_matricula')
-            ->distinct()
-            ->get();
+        // Consultar únicamente los usuarios que tienen registros pendientes de migrar
+        $usersWithPending = User::whereIn('employee_id', function ($query) {
+            $query->select('employee_matricula')
+                ->from('pending_attendances')
+                ->whereNull('migrated_to_attendance_id');
+        })->get();
 
         $totalMigrated = 0;
         $totalFailed = [];
         $processedUsers = 0;
 
-        foreach ($pendingAttendances as $pending) {
-            $user = User::where('employee_id', $pending->employee_matricula)->first();
-
-            if ($user) {
-                $result = $this->migratePendingAttendancesForUser($user);
-                $totalMigrated += $result['migrated'];
-                $totalFailed = array_merge($totalFailed, $result['failed']);
-                $processedUsers++;
-            }
+        foreach ($usersWithPending as $user) {
+            $result = $this->migratePendingAttendancesForUser($user);
+            $totalMigrated += $result['migrated'];
+            $totalFailed = array_merge($totalFailed, $result['failed']);
+            $processedUsers++;
         }
 
         return [
@@ -168,20 +168,23 @@ class AttendanceMigrationService
         $totalPending = PendingAttendance::notMigrated()->count();
         $totalMigrated = PendingAttendance::migrated()->count();
 
-        $pendingByEmployee = PendingAttendance::notMigrated()
-            ->select('employee_matricula', DB::raw('count(*) as count'))
-            ->groupBy('employee_matricula')
-            ->get();
+        // Total de empleados únicos con asistencias pendientes
+        $uniqueEmployeesPending = PendingAttendance::notMigrated()
+            ->distinct('employee_matricula')
+            ->count('employee_matricula');
 
-        $employeesWithUsers = User::whereIn('employee_id', $pendingByEmployee->pluck('employee_matricula'))
-            ->count();
+        // Total de empleados pendientes que ya cuentan con usuario registrado mediante JOIN nativo
+        $employeesWithUsers = PendingAttendance::notMigrated()
+            ->join('users', 'users.employee_id', '=', 'pending_attendances.employee_matricula')
+            ->distinct('pending_attendances.employee_matricula')
+            ->count('pending_attendances.employee_matricula');
 
         return [
             'total_pending' => $totalPending,
             'total_migrated' => $totalMigrated,
-            'unique_employees_pending' => $pendingByEmployee->count(),
+            'unique_employees_pending' => $uniqueEmployeesPending,
             'employees_with_users' => $employeesWithUsers,
-            'employees_without_users' => $pendingByEmployee->count() - $employeesWithUsers,
+            'employees_without_users' => max(0, $uniqueEmployeesPending - $employeesWithUsers),
         ];
     }
 }

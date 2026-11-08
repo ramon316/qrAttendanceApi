@@ -17,8 +17,6 @@ Route::get('/events/{event}', function (Event $event) {
 })->name('events.show');
 
 Route::get('/events/{event}/export', function (Event $event) {
-    $attendances = $event->attendances()->with('user')->get();
-
     $filename = 'asistencias-' . str_replace(' ', '-', $event->name) . '-' . date('Y-m-d') . '.csv';
 
     $headers = [
@@ -26,7 +24,7 @@ Route::get('/events/{event}/export', function (Event $event) {
         'Content-Disposition' => 'attachment; filename="' . $filename . '"',
     ];
 
-    $callback = function() use ($attendances) {
+    $callback = function() use ($event) {
         $file = fopen('php://output', 'w');
 
         // BOM para UTF-8 (para que Excel lo reconozca)
@@ -45,20 +43,22 @@ Route::get('/events/{event}/export', function (Event $event) {
             'Verificado'
         ]);
 
-        // Datos
-        foreach ($attendances as $attendance) {
-            fputcsv($file, [
-                $attendance->user?->name ?? 'N/A',
-                $attendance->user?->email ?? 'N/A',
-                $attendance->user?->employee_id ?? 'N/A',
-                \Carbon\Carbon::parse($attendance->checked_in_at)->format('d/m/Y'),
-                \Carbon\Carbon::parse($attendance->checked_in_at)->format('H:i:s'),
-                number_format($attendance->distance_meters, 2),
-                number_format($attendance->user_latitude, 6),
-                number_format($attendance->user_longitude, 6),
-                $attendance->verified ? 'Verificado' : 'Pendiente'
-            ]);
-        }
+        // Procesar en chunks de 500 para evitar desbordamiento de memoria
+        $event->attendances()->with('user')->chunk(500, function ($attendances) use ($file) {
+            foreach ($attendances as $attendance) {
+                fputcsv($file, [
+                    $attendance->user?->name ?? 'N/A',
+                    $attendance->user?->email ?? 'N/A',
+                    $attendance->user?->employee_id ?? 'N/A',
+                    \Carbon\Carbon::parse($attendance->checked_in_at)->format('d/m/Y'),
+                    \Carbon\Carbon::parse($attendance->checked_in_at)->format('H:i:s'),
+                    number_format($attendance->distance_meters, 2),
+                    number_format($attendance->user_latitude, 6),
+                    number_format($attendance->user_longitude, 6),
+                    $attendance->verified ? 'Verificado' : 'Pendiente'
+                ]);
+            }
+        });
 
         fclose($file);
     };
@@ -89,7 +89,6 @@ Route::prefix('mothers-day')->name('mothers-day.')->group(function () {
     })->name('quick-add');
 
     Route::get('/export', function () {
-        $registrations = \App\Models\MothersDayRegistration::all();
         $filename = 'registros-dia-madres-' . date('Y-m-d') . '.csv';
 
         $headers = [
@@ -97,23 +96,27 @@ Route::prefix('mothers-day')->name('mothers-day.')->group(function () {
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($registrations) {
+        $callback = function() {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($file, ['ID', 'Zona', 'Matrícula', 'Nombre', 'Email', 'Teléfono', 'Fecha Registro']);
 
-            foreach ($registrations as $reg) {
-                fputcsv($file, [
-                    $reg->id,
-                    $reg->zone,
-                    $reg->matricula,
-                    $reg->name,
-                    $reg->email,
-                    $reg->phone,
-                    $reg->created_at->format('d/m/Y H:i:s')
-                ]);
-            }
+            // Procesar en chunks de 500 para streaming eficiente
+            \App\Models\MothersDayRegistration::chunk(500, function ($registrations) use ($file) {
+                foreach ($registrations as $reg) {
+                    fputcsv($file, [
+                        $reg->id,
+                        $reg->zone,
+                        $reg->matricula,
+                        $reg->name,
+                        $reg->email,
+                        $reg->phone,
+                        $reg->created_at?->format('d/m/Y H:i:s') ?? ''
+                    ]);
+                }
+            });
+
             fclose($file);
         };
 

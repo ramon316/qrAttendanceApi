@@ -16,43 +16,49 @@ class AuthController extends Controller
     /* User Register */
     public function register(Request $request)
     {
-        $validated = Validator::make($request->all(),[
+        $validated = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'employee_id' => 'required|string|max:12|unique:users|regex:/^[0-9]+$/',
+            'employee_id' => 'nullable|string|max:12|unique:users|regex:/^[0-9]+$/',
         ]);
 
         /* if validation fail */
         if ($validated->fails()) {
             return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
                 'messsage' => 'Validation Error',
-                'error' => $validated->errors()
+                'errors' => $validated->errors(),
+                'error' => $validated->errors(),
             ], 422);
         }
 
-        /* Verificamos si la matricula existe en la tabla employees */
-        $employee = Employee::where('matricula', $request->employee_id)->first();
+        $employeeId = $request->filled('employee_id') ? trim($request->employee_id) : null;
+        $status = 'pending_verification';
 
-        // Determinar el status basado en si existe la matrícula
-        $status = $employee ? 'active' : 'pending_verification';
-
+        if ($employeeId !== null) {
+            /* Verificamos si la matricula existe en la tabla employees */
+            $employee = Employee::where('matricula', $employeeId)->first();
+            $status = $employee ? 'active' : 'pending_verification';
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'status' => $status,
             'password' => Hash::make($request->password),
-            'employee_id' => $request->employee_id,
+            'employee_id' => $employeeId,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Token de 2 horas unificado con login
+        $token = $user->createToken('auth_token', ['*'], now()->addHours(2))->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => $status === 'active'
                 ? 'User registered successfully with verified employee ID'
-                : 'User registered successfully. Employee ID pending verification',
+                : 'User registered successfully. Pending admin verification',
             'user' => $user,
             'token' => $token,
         ], 201);
@@ -61,7 +67,7 @@ class AuthController extends Controller
     /* User Login */
     public function login(Request $request)
     {
-        $validated = Validator::make($request->all(),[
+        $validated = Validator::make($request->all(), [
             'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:8',
         ]);
@@ -69,26 +75,33 @@ class AuthController extends Controller
         /* if validation fail */
         if ($validated->fails()) {
             return response()->json([
+                'success' => false,
+                'message' => 'Validation Error',
                 'messsage' => 'Validation Error',
-                'error' => $validated->errors()
+                'errors' => $validated->errors(),
+                'error' => $validated->errors(),
             ], 422);
         }
 
         $user = User::where('email', $request->email)->first();
 
         /* if password not match or no exist user */
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
+                'success' => false,
+                'message' => 'Invalid Credentials',
                 'messsage' => 'Invalid Credentials',
             ], 401);
         }
 
-        /* Eliminamos tokens anterioress */
+        /* Eliminamos tokens anteriores */
         $user->tokens()->delete();
-        /* Creamos nuevo token */
+        /* Creamos nuevo token con 2 horas de validez */
         $token = $user->createToken('auth_token', ['*'], now()->addHours(2))->plainTextToken;
 
         return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
             'user' => $user,
             'token' => $token,
         ], 200);
@@ -100,6 +113,8 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
+            'success' => true,
+            'message' => 'Logout Successfully',
             'messsage' => 'Logout Successfully',
         ], 200);
     }
@@ -108,13 +123,13 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         return response()->json([
+            'success' => true,
             'user' => $request->user(),
         ], 200);
     }
 
     public function checkStatus(Request $request)
     {
-
         $user = $request->user();
 
         // Eliminar token actual
@@ -124,6 +139,8 @@ class AuthController extends Controller
         $newToken = $user->createToken('auth_token', ['*'], now()->addHours(2))->plainTextToken;
 
         return response()->json([
+            'success' => true,
+            'message' => 'Token refreshed successfully',
             'user' => $user,
             'token' => $newToken,
         ], 200);

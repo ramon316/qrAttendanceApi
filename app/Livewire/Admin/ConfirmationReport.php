@@ -24,14 +24,23 @@ class ConfirmationReport extends Component
             $query->where('zone', $this->selectedZone);
         }
 
-        $confirmations = $query->get();
+        $row = $query->selectRaw('
+            COUNT(*) as total_families,
+            COALESCE(SUM(adults), 0) as total_adults,
+            COALESCE(SUM(teenagers), 0) as total_teenagers,
+            COALESCE(SUM(children), 0) as total_children
+        ')->first();
+
+        $adults = (int) ($row->total_adults ?? 0);
+        $teenagers = (int) ($row->total_teenagers ?? 0);
+        $children = (int) ($row->total_children ?? 0);
 
         return [
-            'total_families' => $confirmations->count(),
-            'total_adults' => $confirmations->sum('adults'),
-            'total_teenagers' => $confirmations->sum('teenagers'),
-            'total_children' => $confirmations->sum('children'),
-            'total_attendees' => $confirmations->sum('adults') + $confirmations->sum('teenagers') + $confirmations->sum('children'),
+            'total_families' => (int) ($row->total_families ?? 0),
+            'total_adults' => $adults,
+            'total_teenagers' => $teenagers,
+            'total_children' => $children,
+            'total_attendees' => $adults + $teenagers + $children,
         ];
     }
 

@@ -66,9 +66,17 @@ class Event extends Model
                $now->lte($this->end_time);
     }
 
-    // Nuevo accessor
+    // Accessor optimizado para no re-consultar si ya fue cargado con withCount o eager loading
     public function getAttendeesCountAttribute()
     {
+        if (array_key_exists('attendances_count', $this->attributes)) {
+            return (int) $this->attributes['attendances_count'];
+        }
+
+        if ($this->relationLoaded('attendances')) {
+            return $this->attendances->count();
+        }
+
         return $this->attendances()->count();
     }
 
@@ -93,7 +101,11 @@ class Event extends Model
      */
     public function getTotalAdultsAttribute()
     {
-        return $this->confirmations()->sum('adults');
+        if ($this->relationLoaded('confirmations')) {
+            return (int) $this->confirmations->sum('adults');
+        }
+
+        return (int) $this->confirmations()->sum('adults');
     }
 
     /**
@@ -101,7 +113,11 @@ class Event extends Model
      */
     public function getTotalTeenagersAttribute()
     {
-        return $this->confirmations()->sum('teenagers');
+        if ($this->relationLoaded('confirmations')) {
+            return (int) $this->confirmations->sum('teenagers');
+        }
+
+        return (int) $this->confirmations()->sum('teenagers');
     }
 
     /**
@@ -109,7 +125,11 @@ class Event extends Model
      */
     public function getTotalChildrenAttribute()
     {
-        return $this->confirmations()->sum('children');
+        if ($this->relationLoaded('confirmations')) {
+            return (int) $this->confirmations->sum('children');
+        }
+
+        return (int) $this->confirmations()->sum('children');
     }
 
     /**

@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'key' => env('GEMINI_API_KEY'),
+    ],
+
+    'google_gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model_embedding' => env('GEMINI_EMBEDDING_MODEL', 'gemini-embedding-001'),
+        'model_chat' => env('GEMINI_CHAT_MODEL', 'gemini-3.5-flash'),
+        'cache_ttl_days' => (int) env('GEMINI_CACHE_TTL_DAYS', 7),
+    ],
+
 ];

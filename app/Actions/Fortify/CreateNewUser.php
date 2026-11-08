@@ -20,24 +20,37 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        $noMatricula = filter_var($input['no_matricula'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'employee_id' => ['required', 'string', 'max:12', 'unique:users', 'regex:/^[0-9]+$/'],
+            'employee_id' => $noMatricula
+                ? ['nullable']
+                : ['required', 'string', 'max:12', 'unique:users', 'regex:/^[0-9]+$/'],
             'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
+        ], [
+            'employee_id.required' => 'La matrícula es obligatoria o marque la casilla "No cuento con matrícula".',
+            'employee_id.unique' => 'Esta matrícula ya se encuentra registrada por otro usuario.',
+            'employee_id.regex' => 'La matrícula solo debe contener números.',
         ])->validate();
 
-        // Verificar si la matrícula existe en la tabla employees
-        $employee = Employee::where('matricula', $input['employee_id'])->first();
+        $employeeId = (!$noMatricula && !empty($input['employee_id'])) ? trim($input['employee_id']) : null;
 
-        // Determinar el status basado en si existe la matrícula
-        $status = $employee ? 'active' : 'pending_verification';
+        if ($employeeId !== null) {
+            // Verificar si la matrícula existe en la tabla employees
+            $employee = Employee::where('matricula', $employeeId)->first();
+            $status = $employee ? 'active' : 'pending_verification';
+        } else {
+            // Usuario sin matrícula: queda en pending_verification para que el administrador la asigne
+            $status = 'pending_verification';
+        }
 
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
-            'employee_id' => $input['employee_id'],
+            'employee_id' => $employeeId,
             'status' => $status,
             'password' => Hash::make($input['password']),
         ]);

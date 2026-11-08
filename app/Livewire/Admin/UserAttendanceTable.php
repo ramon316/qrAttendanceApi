@@ -38,13 +38,16 @@ class UserAttendanceTable extends DataTableComponent
         // Si solo hay employeeMatricula (sin usuario registrado), solo consultar pending_attendances
         if ($this->employeeMatricula && !$this->userId) {
             return PendingAttendance::query()
+                ->with('event')
                 ->where('employee_matricula', $this->employeeMatricula)
                 ->whereNull('migrated_to_attendance_id');
         }
 
         // Si hay userId, solo mostrar attendances (asistencias confirmadas del usuario registrado)
         if ($this->userId) {
-            return Attendance::query()->where('user_id', $this->userId);
+            return Attendance::query()
+                ->with('event')
+                ->where('user_id', $this->userId);
         }
 
         // Por defecto, retornar consulta vacía
@@ -61,8 +64,7 @@ class UserAttendanceTable extends DataTableComponent
 
             Column::make('Evento', 'event_id')
                 ->format(function ($value, $row) {
-                    // Obtener el evento directamente por ID ya que usamos UNION
-                    $event = \App\Models\Event::find($value);
+                    $event = $row->event;
 
                     if (!$event) {
                         return '<div class="text-sm text-gray-500">Evento no disponible</div>';
@@ -70,15 +72,14 @@ class UserAttendanceTable extends DataTableComponent
 
                     return '<div>
                         <div class="font-semibold text-gray-900 dark:text-gray-100">' . e($event->name) . '</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">' . e(substr($event->description, 0, 50)) . (strlen($event->description) > 50 ? '...' : '') . '</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">' . e(substr($event->description ?? '', 0, 50)) . (strlen($event->description ?? '') > 50 ? '...' : '') . '</div>
                     </div>';
                 })
                 ->html(),
 
             Column::make('Fecha del Evento', 'event_id')
                 ->format(function ($value, $row) {
-                    // Obtener el evento directamente por ID ya que usamos UNION
-                    $event = \App\Models\Event::find($value);
+                    $event = $row->event;
 
                     if (!$event) {
                         return '<div class="text-sm text-gray-500">N/A</div>';
@@ -115,8 +116,7 @@ class UserAttendanceTable extends DataTableComponent
             Column::make('Distancia', 'distance_meters')
                 ->sortable()
                 ->format(function ($value, $row) {
-                    // Obtener el evento directamente por ID ya que usamos UNION
-                    $event = \App\Models\Event::find($row->event_id);
+                    $event = $row->event;
 
                     if (!$event) {
                         return '<div class="text-sm text-gray-500">N/A</div>';

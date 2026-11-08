@@ -17,7 +17,7 @@ class MyAttendances extends Component
             ->orderBy('checked_in_at', 'desc')
             ->paginate(9);
 
-        $totalAttendances = Attendance::where('user_id', auth()->id())->count();
+        $totalAttendances = $attendances->total();
 
         return view('livewire.user.my-attendances', [
             'attendances' => $attendances,

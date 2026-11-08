@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\api\AttendanceController;
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\Api\CctChatController;
 use App\Http\Controllers\api\EventController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,10 @@ Route::post('/validate-matricula', [AuthController::class,'validateMatricula'])-
 
 /* public route event info by qr code */
 Route::get('/events/qr/{qrCode}', [EventController::class,'getByQR'])->name('events.qr');
+
+/* public route CCT RAG query */
+Route::post('/cct/preguntar', [CctChatController::class, 'preguntar'])->name('api.cct.preguntar');
+Route::get('/cct/conversaciones/{session}', [CctChatController::class, 'verSesion'])->name('api.cct.verSesion');
 
 /* private routes */
 Route::middleware('auth:sanctum')->group(function () {

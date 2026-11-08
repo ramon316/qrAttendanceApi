@@ -13,13 +13,19 @@ class Dashboard extends Component
     {
         $userId = auth()->id();
 
-        // Estadísticas
-        $totalAttendances = Attendance::where('user_id', $userId)->count();
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
 
-        $attendancesThisMonth = Attendance::where('user_id', $userId)
-            ->whereMonth('checked_in_at', Carbon::now()->month)
-            ->whereYear('checked_in_at', Carbon::now()->year)
-            ->count();
+        // Estadísticas agregadas en una sola consulta indexable
+        $attendanceStats = Attendance::where('user_id', $userId)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN checked_in_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as this_month
+            ", [$startOfMonth, $endOfMonth])
+            ->first();
+
+        $totalAttendances = (int) ($attendanceStats->total ?? 0);
+        $attendancesThisMonth = (int) ($attendanceStats->this_month ?? 0);
 
         $lastAttendance = Attendance::with('event')
             ->where('user_id', $userId)

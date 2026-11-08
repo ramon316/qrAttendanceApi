@@ -35,11 +35,13 @@ class EventController extends Controller
         if ($request->has('filter')) {
             switch ($request->get('filter')) {
                 case 'active':
-                    $query->where('start_time', '<=', now())
+                    $query->where('active', true)
+                          ->where('start_time', '<=', now())
                           ->where('end_time', '>=', now());
                     break;
                 case 'upcoming':
-                    $query->where('start_time', '>', now());
+                    $query->where('active', true)
+                          ->where('start_time', '>', now());
                     break;
                 case 'past':
                     $query->where('end_time', '<', now());
@@ -49,7 +51,7 @@ class EventController extends Controller
 
         /* apply limit */
         if ($request->has('limit')) {
-            $query->limit($request->get('limit'));
+            $query->limit((int) $request->get('limit'));
         }
 
         // Ahora sí ejecutar la consulta
@@ -74,7 +76,7 @@ class EventController extends Controller
             ], 403);
         }
 
-        $validated = Validator::make($request->all(),[
+        $validated = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'latitude' => 'required|numeric|between:-90,90',
@@ -88,8 +90,10 @@ class EventController extends Controller
         if ($validated->fails()) {
             return response()->json([
                 'success' => false,
+                'message' => 'Validation Error',
                 'messsage' => 'Validation Error',
-                'error' => $validated->errors()
+                'errors' => $validated->errors(),
+                'error' => $validated->errors(),
             ], 422);
         }
 
@@ -109,9 +113,7 @@ class EventController extends Controller
             'success' => true,
             'message' => 'Event created successfully',
             'event' => $event->load('user'),
-            ]
-        , 201);
-
+        ], 201);
     }
 
     /**
@@ -126,7 +128,8 @@ class EventController extends Controller
         ], 200);
     }
 
-    public function getByQR($qrCode){
+    public function getByQR($qrCode)
+    {
         $event = Event::where('qr_code', $qrCode)->first();
 
         if (!$event) {
@@ -136,21 +139,23 @@ class EventController extends Controller
             ], 404);
         }
 
-        if (!$event->active) {
+        if (!$event->isActive()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Event is not active',
             ], 403);
         }
 
-         return response()->json([
+        return response()->json([
             'success' => true,
             'event' => [
                 'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,
-                'latitud' => $event->latitude,
-                'longitud' => $event->longitude,
+                'latitude' => $event->latitude,
+                'longitude' => $event->longitude,
+                'latitud' => $event->latitude,   // Retrocompatibilidad
+                'longitud' => $event->longitude, // Retrocompatibilidad
                 'allowed_radius' => $event->allowed_radius,
                 'start_time' => $event->start_time,
                 'end_time' => $event->end_time,
